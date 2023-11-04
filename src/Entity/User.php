@@ -13,20 +13,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'integer')]
+    private int $id;
 
-    #[ORM\Column(length: 180, unique: true)]
-    private ?string $email = null;
+    #[ORM\Column(type: 'string', length: 180, unique: true, nullable: false)]
+    private ?string $email;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'json')]
     private array $roles = [];
 
     /**
      * @var string The hashed password
      */
-    #[ORM\Column]
-    private ?string $password = null;
+    #[ORM\Column(type: 'string', nullable: false)]
+    private string $password;
+
+    #[ORM\OneToOne(mappedBy: 'idUser', cascade: ['persist', 'remove'])]
+    private ?UserData $userData = null;
 
     public function getId(): ?int
     {
@@ -96,5 +99,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getUserData(): ?UserData
+    {
+        return $this->userData;
+    }
+
+    public function setUserData(UserData $userData): static
+    {
+        // set the owning side of the relation if necessary
+        if ($userData->getIdUser() !== $this) {
+            $userData->setIdUser($this);
+        }
+
+        $this->userData = $userData;
+
+        return $this;
     }
 }

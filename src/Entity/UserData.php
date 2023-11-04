@@ -33,6 +33,13 @@ class UserData
     #[ORM\JoinColumn(nullable: false)]
     private ?User $idUser = null;
 
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Address $mainAddress = null;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Address $contactAddress = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -106,6 +113,30 @@ class UserData
     public function setIdUser(User $idUser): static
     {
         $this->idUser = $idUser;
+
+        return $this;
+    }
+
+    public function getMainAddress(): ?Address
+    {
+        return $this->mainAddress;
+    }
+
+    public function setMainAddress(Address $mainAddress): static
+    {
+        $this->mainAddress = $mainAddress;
+
+        return $this;
+    }
+
+    public function getContactAddress(): ?Address
+    {
+        return $this->contactAddress;
+    }
+
+    public function setContactAddress(?Address $contactAddress): static
+    {
+        $this->contactAddress = $contactAddress;
 
         return $this;
     }
