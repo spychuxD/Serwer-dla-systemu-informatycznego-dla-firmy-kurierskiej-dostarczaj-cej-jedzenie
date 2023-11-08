@@ -21,6 +21,34 @@ class RestaurantRepository extends ServiceEntityRepository
         parent::__construct($registry, Restaurant::class);
     }
 
+    /**
+     * @return Restaurant[] Returns an array of Restaurant objects
+     */
+    public function getAllRestaurants(): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('r.id, r.name, r.description, r.fileName, r.email, r.phoneNumber,
+        a.street, a.apartmentNumber, a.parcelNumber, a.postcode, a.city')
+            ->from('App:Restaurant','r')
+            ->leftJoin('r.restaurantAddress', 'a')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+    public function getOneRestaurantById($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('r.id, r.name, r.description, r.fileName, r.email, r.phoneNumber,
+        a.street, a.apartmentNumber, a.parcelNumber, a.postcode, a.city')
+            ->from('App:Restaurant','r')
+            ->leftJoin('r.restaurantAddress', 'a')
+            ->where('r.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getResult();
+    }
+
 //    /**
 //     * @return Restaurant[] Returns an array of Restaurant objects
 //     */
