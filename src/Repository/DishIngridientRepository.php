@@ -21,6 +21,20 @@ class DishIngridientRepository extends ServiceEntityRepository
         parent::__construct($registry, DishIngridient::class);
     }
 
+    public function getAllByDishId($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('d.id as dishId, d.name as dishName, d.description as dishDescription, d.price, 
+        dc.name as categoryName, dc.description as categoryDescription')
+            ->from('App:Dish','d')
+            ->leftJoin('d.dishCategory', 'dc')
+            ->leftJoin('d.restaurant', 'r')
+            ->andWhere('r.id = :val')
+            ->setParameter('val', $id)
+            ->getQuery()
+            ->getResult();
+    }
+
 //    /**
 //     * @return DishIngridient[] Returns an array of DishIngridient objects
 //     */

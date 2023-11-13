@@ -21,20 +21,23 @@ class DishRepository extends ServiceEntityRepository
         parent::__construct($registry, Dish::class);
     }
 
-//    /**
-//     * @return Dish[] Returns an array of Dish objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('d')
-//            ->andWhere('d.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('d.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    /**
+     * @return Dish[] Returns an array of Dish objects
+     */
+    public function getByIdResturant($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('d.id as dishId, d.name as dishName, d.description as dishDescription, d.price, 
+        dc.name as categoryName, dc.description as categoryDescription')
+            ->from('App:Dish','d')
+            ->leftJoin('d.dishCategory', 'dc')
+            ->leftJoin('d.restaurant', 'r')
+            ->andWhere('r.id = :val')
+            ->setParameter('val', $id)
+            ->getQuery()
+            ->getResult();
+    }
+
 
 //    public function findOneBySomeField($value): ?Dish
 //    {
