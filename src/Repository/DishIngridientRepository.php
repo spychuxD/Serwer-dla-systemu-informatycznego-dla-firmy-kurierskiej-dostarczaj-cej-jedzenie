@@ -24,12 +24,12 @@ class DishIngridientRepository extends ServiceEntityRepository
     public function getAllByDishId($id): array
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        return $qb->select('d.id as dishId, d.name as dishName, d.description as dishDescription, d.price, 
-        dc.name as categoryName, dc.description as categoryDescription')
-            ->from('App:Dish','d')
-            ->leftJoin('d.dishCategory', 'dc')
-            ->leftJoin('d.restaurant', 'r')
-            ->andWhere('r.id = :val')
+        return $qb->select('i.id as ingridientId, i.name as ingridientName, i.description as ingridientDescription,
+        i.price, ic.name as ingridientCategoryName, ic.description as ingridientCategoryDescription, ic.isMultiOption')
+            ->from('App:DishIngridient','di')
+            ->leftJoin('di.ingridient', 'i')
+            ->leftJoin('i.ingridientCategory', 'ic')
+            ->andWhere('di.dish = :val')
             ->setParameter('val', $id)
             ->getQuery()
             ->getResult();

@@ -31,6 +31,8 @@ class RestaurantRepository extends ServiceEntityRepository
         a.street, a.apartmentNumber, a.parcelNumber, a.postcode, a.city')
             ->from('App:Restaurant','r')
             ->leftJoin('r.restaurantAddress', 'a')
+            ->where('a.city = :city')
+            ->setParameter('city', 'Kielce')
             ->getQuery()
             ->getResult();
     }

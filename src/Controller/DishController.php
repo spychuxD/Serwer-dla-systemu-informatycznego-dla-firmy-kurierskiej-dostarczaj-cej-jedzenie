@@ -70,10 +70,12 @@ class DishController extends AbstractController
         $ingridientCategories = [];
         foreach ($ingridients as $ingridient) {
             $categoryName = $ingridient['ingridientCategoryName'];
+            $categoryDescription = $ingridient['ingridientCategoryDescription'];
             $isMultiOption = $ingridient['isMultiOption'];
 
             if (!array_key_exists($categoryName, $ingridientCategories)) {
                 $ingridientCategories[$categoryName]['name'] = $categoryName;
+                $ingridientCategories[$categoryName]['description'] = $categoryDescription;
                 $ingridientCategories[$categoryName]['isMultiOption'] = $isMultiOption;
                 $ingridientCategories[$categoryName]['ingridients'] = [];
             }
@@ -81,7 +83,7 @@ class DishController extends AbstractController
             $ingridientCategories[$categoryName]['ingridients'][] = [
                 'ingridientId' => $ingridient['ingridientId'],
                 'ingridientName' => $ingridient['ingridientName'],
-                'isFree' => $ingridient['isFree'],
+                'ingridientDescription' => $ingridient['ingridientDescription'],
                 'price' => $ingridient['price'],
             ];
         }

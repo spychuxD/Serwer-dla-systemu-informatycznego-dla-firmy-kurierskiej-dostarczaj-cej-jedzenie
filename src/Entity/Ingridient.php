@@ -22,7 +22,7 @@ class Ingridient
     #[ORM\Column]
     private ?float $price = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne(inversedBy: 'ingridients')]
     #[ORM\JoinColumn(nullable: false)]
     private ?IngridientCategory $ingridientCategory = null;
 
