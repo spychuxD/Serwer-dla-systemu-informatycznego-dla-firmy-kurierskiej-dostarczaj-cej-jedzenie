@@ -28,7 +28,7 @@ class DishRepository extends ServiceEntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         return $qb->select('d.id as dishId, d.name as dishName, d.description as dishDescription, d.price, 
-        dc.name as categoryName, dc.description as categoryDescription')
+        dc.id as categoryId, dc.name as categoryName, dc.description as categoryDescription')
             ->from('App:Dish','d')
             ->leftJoin('d.dishCategory', 'dc')
             ->leftJoin('d.restaurant', 'r')

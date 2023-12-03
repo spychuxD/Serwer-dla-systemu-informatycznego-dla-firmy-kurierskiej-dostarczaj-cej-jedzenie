@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,10 +49,28 @@ class UserController extends AbstractController
             );
         } else {
             return new Response(
-                json_encode(array('Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.')),
+                json_encode(array('Nieprzewidziany błąd')),
                 207,
                 array('content-type' => 'application/json')
             );
         }
+    }
+
+    #[Route('api/public/updateUserToken', name: 'api_update_user_token', methods: 'POST')]
+    public function updateUserToken(Request $request): Response
+    {
+        $response = $this->forward(SecurityController::class . '::decodeToken');
+        $data = json_decode($response->getContent(), true);
+        $email = $data['username'];
+        $user = $this->userRepository->getUserByEmail($email);
+        $userTemp = $user[0];
+        $userTemp->setToken($request->headers->get('Authorization'));
+        $this->userRepository->upgradeToken($userTemp);
+
+        return new Response(
+            json_encode(array('Upgraded')),
+            201,
+            array('content-type' => 'application/json')
+        );
     }
 }

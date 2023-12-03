@@ -28,7 +28,7 @@ class RestaurantController extends AbstractController
 
         if(empty($restaurants)) {
             return new JsonResponse(
-                ['message' => 'Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.'],
+                ['message' => 'Nieprzewidziany błąd'],
                 207
             );
         }
@@ -42,7 +42,7 @@ class RestaurantController extends AbstractController
         $restaurant = $this->restaurantRepository->getOneRestaurantById($id);
         if(empty($restaurant)) {
             return new JsonResponse(
-                ['message' => 'Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.'],
+                ['message' => 'Nieprzewidziany błąd'],
                 207
             );
         }
@@ -65,7 +65,7 @@ class RestaurantController extends AbstractController
             return $response->deleteFileAfterSend(true);
         } else {
             return new JsonResponse(
-                ['message' => 'Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.'],
+                ['message' => 'Nieprzewidziany błąd'],
                 207
             );
         }

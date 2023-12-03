@@ -25,7 +25,7 @@ class DishIngridientRepository extends ServiceEntityRepository
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
         return $qb->select('i.id as ingridientId, i.name as ingridientName, i.description as ingridientDescription,
-        i.price, ic.name as ingridientCategoryName, ic.description as ingridientCategoryDescription, ic.isMultiOption')
+        i.price, ic.id as ingridientCategoryId, ic.name as ingridientCategoryName, ic.description as ingridientCategoryDescription, ic.isMultiOption')
             ->from('App:DishIngridient','di')
             ->leftJoin('di.ingridient', 'i')
             ->leftJoin('i.ingridientCategory', 'ic')

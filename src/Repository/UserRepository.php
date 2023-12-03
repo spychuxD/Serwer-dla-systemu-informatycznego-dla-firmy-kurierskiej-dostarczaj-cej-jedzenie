@@ -44,6 +44,11 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+    public function upgradeToken($user) {
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+    }
+
     public function addUser(array $userData)
     {
         $existUser = $this->findBy(array('email'=> $userData['email']));
@@ -57,13 +62,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $hashedPassword = $this->passwordHasher->hashPassword($user, $userData['password']);
         $user->setPassword($hashedPassword);
 
-
         $this->getEntityManager()->persist($user);
         try {
             $this->getEntityManager()->flush();
         } catch (Exception $e) {
             return $e->getMessage();
         }
+    }
+
+    public function getUserByEmail($email): array
+    {
+        return $this->findBy(array('email'=> $email));
     }
 
 //    /**

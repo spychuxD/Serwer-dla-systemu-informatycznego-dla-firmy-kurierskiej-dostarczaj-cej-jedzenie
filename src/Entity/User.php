@@ -31,6 +31,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(mappedBy: 'idUser', cascade: ['persist', 'remove'])]
     private ?UserData $userData = null;
 
+    #[ORM\Column(length: 1000, nullable: true)]
+    private ?string $token = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -114,6 +117,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->userData = $userData;
+
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function setToken(?string $token): static
+    {
+        $this->token = $token;
 
         return $this;
     }

@@ -24,7 +24,7 @@ class DishController extends AbstractController
         $dishes = $this->dishRepository->getByIdResturant($id);
         if(empty($dishes)) {
             return new Response(
-                json_encode(array('Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.')),
+                json_encode(array('Nieprzewidziany błąd')),
                 207,
                 array('content-type' => 'application/json')
             );
@@ -34,8 +34,10 @@ class DishController extends AbstractController
         foreach ($dishes as $dish) {
             $categoryName = $dish['categoryName'];
             $categoryDescription = $dish['categoryDescription'];
+            $categoryId = $dish['categoryId'];
 
             if (!array_key_exists($categoryName, $restaurantCategories)) {
+                $restaurantCategories[$categoryName]['categoryId'] = $categoryId;
                 $restaurantCategories[$categoryName]['categoryName'] = $categoryName;
                 $restaurantCategories[$categoryName]['categoryDescription'] = $categoryDescription;
                 $restaurantCategories[$categoryName]['categoryDishes'] = [];
@@ -45,6 +47,8 @@ class DishController extends AbstractController
                 'dishId' => $dish['dishId'],
                 'dishName' => $dish['dishName'],
                 'dishDescription' => $dish['dishDescription'],
+                'dishCategoryId' => $categoryId,
+                'dishcategoryName' => $categoryName,
                 'price' => $dish['price'],
             ];
         }
@@ -59,34 +63,62 @@ class DishController extends AbstractController
     public function getDishIngridients($id)
     {
         $ingridients = $this->dishIngridientRepository->getAllByDishId($id);
-        if(empty($ingridients)) {
+
+        if (empty($ingridients)) {
             return new Response(
-                json_encode(array('Nieprzewidziany wyjątek - brak danych. Prosimy o kontakt z serwisem.')),
+                json_encode(array('Nieprzewidziany błąd')),
                 207,
                 array('content-type' => 'application/json')
             );
         }
 
         $ingridientCategories = [];
+
         foreach ($ingridients as $ingridient) {
+            $categoryId = $ingridient['ingridientCategoryId'];
             $categoryName = $ingridient['ingridientCategoryName'];
             $categoryDescription = $ingridient['ingridientCategoryDescription'];
             $isMultiOption = $ingridient['isMultiOption'];
 
-            if (!array_key_exists($categoryName, $ingridientCategories)) {
-                $ingridientCategories[$categoryName]['name'] = $categoryName;
-                $ingridientCategories[$categoryName]['description'] = $categoryDescription;
-                $ingridientCategories[$categoryName]['isMultiOption'] = $isMultiOption;
-                $ingridientCategories[$categoryName]['ingridients'] = [];
-            }
-
-            $ingridientCategories[$categoryName]['ingridients'][] = [
+            $ingridientTemp = [
                 'ingridientId' => $ingridient['ingridientId'],
                 'ingridientName' => $ingridient['ingridientName'],
                 'ingridientDescription' => $ingridient['ingridientDescription'],
                 'price' => $ingridient['price'],
             ];
+
+            $categoryFound = false;
+
+            foreach ($ingridientCategories as &$ingridientCategory) {
+                if ($ingridientCategory['ingridientCategoryName'] === $categoryName) {
+                    $existingInCategory = false;
+                    foreach ($ingridientCategory['ingridients'] as $existingIngridient) {
+                        if ($existingIngridient['ingridientId'] === $ingridient['ingridientId']) {
+                            $existingInCategory = true;
+                            break;
+                        }
+                    }
+
+                    if (!$existingInCategory) {
+                        $ingridientCategory['ingridients'][] = $ingridientTemp;
+                    }
+
+                    $categoryFound = true;
+                    break;
+                }
+            }
+
+            if (!$categoryFound) {
+                $ingridientCategories[] = [
+                    'ingridientCategoryId' => $categoryId,
+                    'ingridientCategoryName' => $categoryName,
+                    'ingridientCategoryDescription' => $categoryDescription,
+                    'isMultiOption' => $isMultiOption,
+                    'ingridients' => [$ingridientTemp],
+                ];
+            }
         }
+
         return new Response(
             json_encode($ingridientCategories),
             200,
