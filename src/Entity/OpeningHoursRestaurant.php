@@ -15,7 +15,7 @@ class OpeningHoursRestaurant
     private ?int $id = null;
 
     #[ORM\Column(length: 5)]
-    private ?string $dayOfWeek = null;
+    private ?string $dayOfWeekFrom = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $openHour = null;
@@ -27,19 +27,22 @@ class OpeningHoursRestaurant
     #[ORM\JoinColumn(nullable: false)]
     private ?Restaurant $restaurant = null;
 
+    #[ORM\Column(length: 5)]
+    private ?string $dayOfWeekTo = null;
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getDayOfWeek(): ?string
+    public function getDayOfWeekFrom(): ?string
     {
-        return $this->dayOfWeek;
+        return $this->dayOfWeekFrom;
     }
 
-    public function setDayOfWeek(string $dayOfWeek): static
+    public function setDayOfWeekFrom(string $dayOfWeekFrom): static
     {
-        $this->dayOfWeek = $dayOfWeek;
+        $this->dayOfWeekFrom = $dayOfWeekFrom;
 
         return $this;
     }
@@ -76,6 +79,18 @@ class OpeningHoursRestaurant
     public function setRestaurant(?Restaurant $restaurant): static
     {
         $this->restaurant = $restaurant;
+
+        return $this;
+    }
+
+    public function getDayOfWeekTo(): ?string
+    {
+        return $this->dayOfWeekTo;
+    }
+
+    public function setDayOfWeekTo(string $dayOfWeekTo): static
+    {
+        $this->dayOfWeekTo = $dayOfWeekTo;
 
         return $this;
     }

@@ -50,6 +50,21 @@ class RestaurantController extends AbstractController
         return new JsonResponse($restaurant, 200);
     }
 
+    #[Route('api/private/restaurant/{id}', name: 'api_private_restaurant_id', methods: 'GET')]
+    public function getPrivateRestaurantInfo($id) :JsonResponse
+    {
+        $restaurant = $this->restaurantRepository->getOneRestaurantByIdToEdit($id);
+
+        if(empty($restaurant)) {
+            return new JsonResponse(
+                ['message' => 'Nieprzewidziany błąd'],
+                207
+            );
+        }
+
+        return new JsonResponse($restaurant, 200);
+    }
+
     #[Route('api/public/restaurant/img/{img}', name: 'api_restaurant_img', methods: 'GET')]
     public function getRestaurantImg($img) :Response
     {
