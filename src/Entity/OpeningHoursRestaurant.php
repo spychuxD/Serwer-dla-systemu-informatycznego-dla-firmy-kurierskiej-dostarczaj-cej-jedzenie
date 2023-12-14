@@ -14,7 +14,7 @@ class OpeningHoursRestaurant
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 5)]
+    #[ORM\Column(length: 15)]
     private ?string $dayOfWeekFrom = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -27,7 +27,7 @@ class OpeningHoursRestaurant
     #[ORM\JoinColumn(nullable: false)]
     private ?Restaurant $restaurant = null;
 
-    #[ORM\Column(length: 5)]
+    #[ORM\Column(length: 15)]
     private ?string $dayOfWeekTo = null;
 
     public function getId(): ?int

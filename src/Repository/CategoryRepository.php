@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
  * @extends ServiceEntityRepository<Category>
@@ -19,6 +20,16 @@ class CategoryRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Category::class);
+    }
+
+    public function addCategory($data) {
+        $this->getEntityManager()->persist($data);
+        try {
+            $this->getEntityManager()->flush();
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+        return null;
     }
 
 //    /**

@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\AddressRepository;
+use App\Repository\UserDataRepository;
 use App\Repository\UserRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,16 +16,21 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
     private UserRepository $userRepository;
+    private UserDataRepository $userDataRepository;
+    private AddressRepository $addressRepository;
 
-    public function __construct(UserRepository $userRepository) {
+    public function __construct(UserRepository $userRepository, UserDataRepository $userDataRepository, AddressRepository $adddressRepository) {
         $this->userRepository = $userRepository;
+        $this->userDataRepository = $userDataRepository;
+        $this->addressRepository = $adddressRepository;
     }
 
     #[Route('registration', name: 'api_registration', methods: 'POST')]
     public function index(Request $request): Response
     {
         $content = $request->getContent();
-        $user = json_decode($content, true);
+        $tmp = json_decode($content, true);
+        $user = $tmp['userRegister'];
 
         if(!array_key_exists('email', $user) || empty($user['email']) || !array_key_exists('password', $user)
             || empty($user['password']))
@@ -42,8 +49,24 @@ class UserController extends AbstractController
                 array('content-type' => 'application/json')
             );
         } else if (empty($success)) {
+            $existingUser = $this->userRepository->getUserByEmail($user['email']);
+            $result = $this->userDataRepository->addUserData($user, $existingUser[0]);
+            if ($result === 0) {
+                return new Response(
+                    json_encode(array('Pomyślnie zarejestrowano użytkownika do systemu, lecz adres został podany nieprawidłowo, możesz go zmienić w edycji profilu.')),
+                    207,
+                    array('content-type' => 'application/json')
+                );
+            }
+            if ($result === 1) {
+                return new Response(
+                    json_encode(array('Nieprzewidziany wyjątek, ponieważ system próbuje dodać dane dla nieistniejacego adresu email. Sprawdź poprawność danych logowania.')),
+                    207,
+                    array('content-type' => 'application/json')
+                );
+            }
             return new Response(
-                json_encode(array('Pomyślnie dodano użytkownika do systemu.')),
+                json_encode(array('Pomyślnie zarejestrowano użytkownika do systemu.')),
                 201,
                 array('content-type' => 'application/json')
             );
@@ -59,6 +82,12 @@ class UserController extends AbstractController
     #[Route('api/public/updateUserToken', name: 'api_update_user_token', methods: 'POST')]
     public function updateUserToken(Request $request): Response
     {
+        $authorizationHeader = $request->headers->get('Authorization');
+        dump($authorizationHeader);die;
+//        $response = $this->forward(
+//            SecurityController::class . '::decodeToken',
+//            ['authorizationHeader' => $authorizationHeader]
+//        );
         $response = $this->forward(SecurityController::class . '::decodeToken');
         $data = json_decode($response->getContent(), true);
         $email = $data['username'];

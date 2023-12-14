@@ -38,9 +38,11 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-         - { path: ^/api/login, roles: ROLE_USER }
+         - { path: ^/api/login, roles: }
          - { path: ^/api/public, roles: }
-         - { path: ^/api, roles: [ROLE_OWNER, ROLE_ADMIN, ROLE_RESTAURANT, ROLE_COURIER] }
+         - { path: ^/api/user, roles: [ROLE_USER]}
+         - { path: ^/api/private, roles: [ROLE_OWNER, ROLE_RESTAURANT, ROLE_COURIER] }
+         - { path: ^/api, roles: [ROLE_SUPERUSER] }
 
 when@test:
     security:

@@ -11,8 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class SecurityController  extends AbstractController
 {
     #[Route('api/public/decodeToken', name: 'api_decode_token', methods: 'POST')]
-    public function decodeToken(Request $request, JWTEncoderInterface $jwtEncoder)
+    public function decodeToken(Request $request, JWTEncoderInterface $jwtEncoder, $authorizationHeader)
     {
+//        dump($authorizationHeader);die;
         $token = $request->headers->get('Authorization');
         // Usuń "Bearer " z tokena
         $token = str_replace('Bearer ', '', $token);

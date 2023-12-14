@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\OpeningHoursRestaurant;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
  * @extends ServiceEntityRepository<OpeningHoursRestaurant>
@@ -19,6 +20,16 @@ class OpeningHoursRestaurantRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, OpeningHoursRestaurant::class);
+    }
+
+    public function addOpeningHour($data) {
+        $this->getEntityManager()->persist($data);
+        try {
+            $this->getEntityManager()->flush();
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+        return null;
     }
 
 //    /**

@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
@@ -84,5 +85,25 @@ class RestaurantController extends AbstractController
                 207
             );
         }
+    }
+
+    #[Route('/api/private/addRestaurant', name: 'api_private_add_restaurant', methods: 'POST')]
+    public function addRestaurant(Request $request): Response
+    {
+        $content = $request->getContent();
+        $restaurant = json_decode($content, true);
+        $result = $this->restaurantRepository->setRestaurant($restaurant['restaurant']);
+        if(!empty($result)) {
+            return new Response(
+                json_encode($result),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message'=>'Pomyślnie dodano restauracje do systemu')),
+            201,
+            array('content-type' => 'application/json')
+        );
     }
 }

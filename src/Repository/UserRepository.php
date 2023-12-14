@@ -68,6 +68,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         } catch (Exception $e) {
             return $e->getMessage();
         }
+        return null;
     }
 
     public function getUserByEmail($email): array
