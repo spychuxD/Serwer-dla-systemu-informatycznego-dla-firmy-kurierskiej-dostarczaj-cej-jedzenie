@@ -22,7 +22,7 @@ class RestaurantController extends AbstractController
         $this->restaurantRepository = $restaurantRepository;
     }
 
-    #[Route('api/public/restaurants', name: 'api_restaurants', methods: 'GET')]
+    #[Route('common/restaurants', name: 'common_restaurants', methods: 'GET')]
     public function getRestaurants(): JsonResponse
     {
         $restaurants = $this->restaurantRepository->getAllRestaurants();
@@ -37,7 +37,7 @@ class RestaurantController extends AbstractController
         return new JsonResponse($restaurants, 200);
     }
 
-    #[Route('api/public/restaurant/{id}', name: 'api_restaurant_id', methods: 'GET')]
+    #[Route('common/restaurant/{id}', name: 'common_restaurant_id', methods: 'GET')]
     public function getRestaurantInfo($id) :JsonResponse
     {
         $restaurant = $this->restaurantRepository->getOneRestaurantById($id);
@@ -51,9 +51,10 @@ class RestaurantController extends AbstractController
         return new JsonResponse($restaurant, 200);
     }
 
-    #[Route('api/private/restaurant/{id}', name: 'api_private_restaurant_id', methods: 'GET')]
+    #[Route('api/admin/restaurant/{id}', name: 'api_restaurant_id', methods: 'GET')]
     public function getPrivateRestaurantInfo($id) :JsonResponse
     {
+        //sprawdzenie roli
         $restaurant = $this->restaurantRepository->getOneRestaurantByIdToEdit($id);
 
         if(empty($restaurant)) {
@@ -66,7 +67,7 @@ class RestaurantController extends AbstractController
         return new JsonResponse($restaurant, 200);
     }
 
-    #[Route('api/public/restaurant/img/{img}', name: 'api_restaurant_img', methods: 'GET')]
+    #[Route('common/restaurant/img/{img}', name: 'common_restaurant_img', methods: 'GET')]
     public function getRestaurantImg($img) :Response
     {
         $filename = 'C:/Users/Spychu/PhpstormProjects/WebApp/symfony/app/images/restaurants/' . $img;
@@ -87,7 +88,7 @@ class RestaurantController extends AbstractController
         }
     }
 
-    #[Route('/api/private/addRestaurant', name: 'api_private_add_restaurant', methods: 'POST')]
+    #[Route('api/admin/addRestaurant', name: 'api_add_restaurant', methods: 'POST')]
     public function addRestaurant(Request $request): Response
     {
         $content = $request->getContent();

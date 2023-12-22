@@ -25,7 +25,7 @@ class UserController extends AbstractController
         $this->addressRepository = $adddressRepository;
     }
 
-    #[Route('registration', name: 'api_registration', methods: 'POST')]
+    #[Route('common/registration', name: 'common_registration', methods: 'POST')]
     public function index(Request $request): Response
     {
         $content = $request->getContent();
@@ -79,17 +79,12 @@ class UserController extends AbstractController
         }
     }
 
-    #[Route('api/public/updateUserToken', name: 'api_update_user_token', methods: 'POST')]
+    #[Route('common/updateUserToken', name: 'common_update_user_token', methods: 'POST')]
     public function updateUserToken(Request $request): Response
     {
-        $authorizationHeader = $request->headers->get('Authorization');
-        dump($authorizationHeader);die;
-//        $response = $this->forward(
-//            SecurityController::class . '::decodeToken',
-//            ['authorizationHeader' => $authorizationHeader]
-//        );
         $response = $this->forward(SecurityController::class . '::decodeToken');
         $data = json_decode($response->getContent(), true);
+
         $email = $data['username'];
         $user = $this->userRepository->getUserByEmail($email);
         $userTemp = $user[0];

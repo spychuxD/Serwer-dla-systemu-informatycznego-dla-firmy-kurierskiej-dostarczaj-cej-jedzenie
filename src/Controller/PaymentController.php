@@ -25,7 +25,7 @@ class PaymentController extends AbstractController
         $this->paymentRepository = $paymentRepository;
         $this->restaurantRepository = $restaurantRepository;
     }
-    #[Route('api/public/payment', name: 'api_public_payment', methods: 'POST')]
+    #[Route('common/payment', name: 'common_public_payment', methods: 'POST')]
     public function makePayment(Request $request): Response
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');
@@ -204,12 +204,5 @@ class PaymentController extends AbstractController
             201,
             array('content-type' => 'application/json')
         );
-    }
-    #[Route('/payment', name: 'app_payment')]
-    public function index(): Response
-    {
-        return $this->render('payment/index.html.twig', [
-            'controller_name' => 'PaymentController',
-        ]);
     }
 }
