@@ -6,12 +6,16 @@ use App\Entity\Payment;
 use App\Repository\PaymentRepository;
 use App\Repository\RestaurantRepository;
 use App\Repository\UserRepository;
+use Pusher\Pusher;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use function Webmozart\Assert\Tests\StaticAnalysis\string;
+use Ratchet\ConnectionInterface;
+use Symfony\Component\WebSocket\Server\TopicHandlerInterface;
+use Symfony\Component\WebSocket\Server\ConnectionManagerInterface;
 
 class PaymentController extends AbstractController
 {
@@ -26,7 +30,7 @@ class PaymentController extends AbstractController
         $this->restaurantRepository = $restaurantRepository;
     }
     #[Route('common/payment', name: 'common_public_payment', methods: 'POST')]
-    public function makePayment(Request $request): Response
+    public function makePayment(Request $request, SerializerInterface $serializer, ConnectionManagerInterface $connectionManager): Response
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');
         $data = json_decode($response->getContent(), true);
@@ -199,6 +203,23 @@ class PaymentController extends AbstractController
                 array('content-type' => 'application/json')
             );
         }
+        $app_id = '1730656';
+        $app_key = '17a7ae8441a823d0c153';
+        $app_secret = 'ec3363acab2d93d835c4';
+        $app_cluster = 'eu';
+
+        $pusher = new Pusher($app_key, $app_secret, $app_id, ['cluster' => $app_cluster]);
+
+        //dla http:
+//        $options = [
+//            'cluster' => $app_cluster,
+//            'useTLS' => false
+//        ];
+
+//        $pusher = new Pusher\Pusher($app_key, $app_secret, $app_id, $options);
+
+        $data['message'] = 'hello world';
+        $pusher->trigger('orders', 'orderCreated', $data);
         return new Response(
             json_encode($transactionResponse['transactionPaymentUrl']),
             201,
