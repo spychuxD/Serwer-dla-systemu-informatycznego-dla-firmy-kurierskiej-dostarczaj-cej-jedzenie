@@ -2,35 +2,39 @@
 
 namespace App\Controller;
 
+use App\Entity\Order;
 use App\Entity\Payment;
+use App\Repository\CourierRepository;
+use App\Repository\OrderRepository;
 use App\Repository\PaymentRepository;
 use App\Repository\RestaurantRepository;
 use App\Repository\UserRepository;
 use Pusher\Pusher;
-use Symfony\Component\Serializer\SerializerInterface;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Ratchet\ConnectionInterface;
-use Symfony\Component\WebSocket\Server\TopicHandlerInterface;
-use Symfony\Component\WebSocket\Server\ConnectionManagerInterface;
 
 class PaymentController extends AbstractController
 {
     private UserRepository $userRepository;
     private PaymentRepository $paymentRepository;
     private RestaurantRepository $restaurantRepository;
+    private CourierRepository $courierRepository;
+    private OrderRepository $orderRepository;
 
-    public function __construct(UserRepository $userRepository, PaymentRepository $paymentRepository, RestaurantRepository $restaurantRepository)
+    public function __construct(UserRepository $userRepository, PaymentRepository $paymentRepository, RestaurantRepository $restaurantRepository, CourierRepository $courierRepository, OrderRepository $orderRepository)
     {
         $this->userRepository = $userRepository;
         $this->paymentRepository = $paymentRepository;
         $this->restaurantRepository = $restaurantRepository;
+        $this->courierRepository = $courierRepository;
+        $this->orderRepository = $orderRepository;
     }
     #[Route('common/payment', name: 'common_public_payment', methods: 'POST')]
-    public function makePayment(Request $request, SerializerInterface $serializer, ConnectionManagerInterface $connectionManager): Response
+    public function makePayment(Request $request): Response
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');
         $data = json_decode($response->getContent(), true);
@@ -78,7 +82,7 @@ class PaymentController extends AbstractController
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => http_build_query($postRequest),
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CAINFO => 'C:/Users/dawid/PhpstormProjects/symfony6foodApp/config/CA/cacert.pem',
         );
 
         foreach ($options as $key => $option) {
@@ -141,7 +145,7 @@ class PaymentController extends AbstractController
                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                     CURLOPT_CUSTOMREQUEST => 'POST',
                     CURLOPT_POSTFIELDS => json_encode($postRequest),
-                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_CAINFO => 'C:/Users/dawid/PhpstormProjects/symfony6foodApp/config/CA/cacert.pem',
                     CURLOPT_HTTPHEADER => array(
                         'Content-Type: application/json',
                         'Authorization: Bearer ' . $accessToken
@@ -182,6 +186,33 @@ class PaymentController extends AbstractController
                             array('content-type' => 'application/json')
                         );
                     }
+
+                    $restaurantOrder = $this->restaurantRepository->getRestaurantById($params['hiddenDescription']);
+                    $courierArray = $this->findNearestCourier($restaurantOrder->getLat(),$restaurantOrder->getLng());
+                    if (empty($courierArray['nearest_courier']['id'])) {
+                        return new Response(
+                            json_encode('Brak wolnych kurierów. Przepraszamy :<'),
+                            207,
+                            array('content-type' => 'application/json')
+                        );
+                    }
+                    $restaurantOrder = $this->restaurantRepository->getRestaurantById($params['hiddenDescription']);
+                    $order = new Order();
+                    $order->setRestaurant($restaurantOrder);
+                    $order->setAddress($params['address']);
+                    $order->setCart($params['cart']);
+                    $order->setCost($params['cost']);
+                    $courier = $this->courierRepository->getCourierById($courierArray['nearest_courier']['id']);
+                    $order->setCourier($courier);
+                    $order->setStatus('PENDING');
+                    $errors = $this->orderRepository->addOrder($order);
+                    if ($errors !== null) {
+                        return new Response(
+                            json_encode($errors),
+                            207,
+                            array('content-type' => 'application/json')
+                        );
+                    }
                 } else {
                     return new Response(
                         json_encode(array('Wystąpił problem podczas tworzenia transakcji. Prawdopodobnie problem dotyczy błędnego adresu email.')),
@@ -203,27 +234,89 @@ class PaymentController extends AbstractController
                 array('content-type' => 'application/json')
             );
         }
-        $app_id = '1730656';
-        $app_key = '17a7ae8441a823d0c153';
-        $app_secret = 'ec3363acab2d93d835c4';
-        $app_cluster = 'eu';
 
-        $pusher = new Pusher($app_key, $app_secret, $app_id, ['cluster' => $app_cluster]);
-
-        //dla http:
-//        $options = [
-//            'cluster' => $app_cluster,
-//            'useTLS' => false
-//        ];
-
-//        $pusher = new Pusher\Pusher($app_key, $app_secret, $app_id, $options);
-
-        $data['message'] = 'hello world';
-        $pusher->trigger('orders', 'orderCreated', $data);
         return new Response(
             json_encode($transactionResponse['transactionPaymentUrl']),
             201,
             array('content-type' => 'application/json')
         );
+    }
+
+    public function findNearestCourier(float $lat, float $lng): array
+    {
+        $couriers = $this->courierRepository->getCourierNotAssigned();
+        // Znajdź kuriera najbliżej restauracji
+        $nearestCourier = $this->findNearestCourierToRestaurant($lat, $lng, $couriers);
+        if (empty($nearestCourier)) {
+            return [
+                'nearest_courier' => [
+                    'id' => 0
+                ],
+            ];
+        }
+        // Zwróć dane w formie JSON
+        return [
+            'nearest_courier' => [
+                'id' => $nearestCourier->getId()
+            ],
+        ];
+    }
+
+    /**
+     * Znajduje kuriera najbliżej danej restauracji.
+     *
+     * @param Restaurant $restaurant
+     * @param array $couriers
+     * @return Courier|null
+     */
+    private function findNearestCourierToRestaurant(float $lat, float $lng, array $couriers)
+    {
+        $nearestCourier = null;
+        $minDistance = PHP_INT_MAX;
+
+        foreach ($couriers as $courier) {
+            $distance = $this->calculateDistance(
+                $lat,
+                $lng,
+                $courier->getLat(),
+                $courier->getLng()
+            );
+
+            if ($distance < $minDistance) {
+                $minDistance = $distance;
+                $nearestCourier = $courier;
+            }
+        }
+
+        return $nearestCourier;
+    }
+
+    /**
+     * Oblicza odległość między dwoma punktami na sferze ziemi (w przybliżeniu).
+     *
+     * @param float $lat1
+     * @param float $lng1
+     * @param float $lat2
+     * @param float $lng2
+     * @return float
+     */
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371; // Przybliżony promień Ziemi w kilometrach
+
+        $lat1Rad = deg2rad($lat1);
+        $lng1Rad = deg2rad($lng1);
+        $lat2Rad = deg2rad($lat2);
+        $lng2Rad = deg2rad($lng2);
+
+        $dlat = $lat2Rad - $lat1Rad;
+        $dlng = $lng2Rad - $lng1Rad;
+
+        $a = sin($dlat / 2) * sin($dlat / 2) + cos($lat1Rad) * cos($lat2Rad) * sin($dlng / 2) * sin($dlng / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        $distance = $earthRadius * $c;
+
+        return $distance;
     }
 }

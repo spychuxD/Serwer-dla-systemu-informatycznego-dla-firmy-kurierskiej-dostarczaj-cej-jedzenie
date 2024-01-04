@@ -59,7 +59,7 @@ class DishController extends AbstractController
         );
     }
 
-    #[Route('common/dishingridients/dish/{id}', name: 'common_dish_ingridients_by_id', methods: 'GET')]
+    #[Route('common/dishingridients/{id}', name: 'common_dish_ingridients_by_id', methods: 'GET')]
     public function getDishIngridients($id)
     {
         $ingridients = $this->dishIngridientRepository->getAllByDishId($id);

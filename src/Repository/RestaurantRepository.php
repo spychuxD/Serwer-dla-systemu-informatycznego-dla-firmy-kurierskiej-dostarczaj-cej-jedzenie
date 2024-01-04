@@ -61,6 +61,17 @@ class RestaurantRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function getRestaurantById($id): ?Restaurant
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('r')
+            ->from('App:Restaurant','r')
+            ->where('r.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function getOneRestaurantByIdToEdit($id): array
     {
         $qb = $this->getEntityManager()->createQueryBuilder();

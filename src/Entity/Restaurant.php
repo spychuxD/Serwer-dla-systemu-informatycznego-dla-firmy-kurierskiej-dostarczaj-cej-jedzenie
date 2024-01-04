@@ -47,6 +47,12 @@ class Restaurant
     #[ORM\JoinColumn(nullable: true)]
     private ?UserData $owner = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $lat = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $lng = null;
+
     public function __construct()
     {
         $this->restaurantOpeningHours = new ArrayCollection();
@@ -229,6 +235,30 @@ class Restaurant
     public function setOwner(UserData $owner): static
     {
         $this->owner = $owner;
+
+        return $this;
+    }
+
+    public function getLat(): ?float
+    {
+        return $this->lat;
+    }
+
+    public function setLat(?float $lat): static
+    {
+        $this->lat = $lat;
+
+        return $this;
+    }
+
+    public function getLng(): ?float
+    {
+        return $this->lng;
+    }
+
+    public function setLng(?float $lng): static
+    {
+        $this->lng = $lng;
 
         return $this;
     }
