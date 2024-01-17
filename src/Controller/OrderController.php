@@ -119,4 +119,22 @@ class OrderController extends AbstractController
             array('content-type' => 'application/json')
         );
     }
+
+    #[Route('api/admin/getOrders', name: 'api_admin_get_orders', methods: 'GET')]
+    public function getOrders(): Response
+    {
+        $orders = $this->orderRepository->getOrders();
+        if(empty($orders)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($orders),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
 }

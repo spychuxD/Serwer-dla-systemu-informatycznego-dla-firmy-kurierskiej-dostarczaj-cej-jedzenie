@@ -32,6 +32,22 @@ class CategoryRepository extends ServiceEntityRepository
         return null;
     }
 
+    public function getCategories(): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $categories = $qb->select('c.id, c.name, c.description')
+            ->from('App:Category','c')
+            ->getQuery()
+            ->getResult();
+        $result = [];
+        foreach ($categories as $category) {
+            $result[] = [
+                'text'=>$category['name'],
+                'value'=>$category['id']
+            ];
+        }
+        return $result;
+    }
 //    /**
 //     * @return Category[] Returns an array of Category objects
 //     */

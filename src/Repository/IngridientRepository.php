@@ -20,7 +20,25 @@ class IngridientRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Ingridient::class);
     }
-
+    public function getCategoryIngridients($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $ingridients = $qb->select('i.id, i.name, i.description')
+            ->from('App:Ingridient','i')
+            ->leftJoin('i.ingridientCategory', 'ic')
+            ->where('ic.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getResult();
+        $result = [];
+        foreach ($ingridients as $ingridient) {
+            $result[] = [
+                'text'=>$ingridient['name'],
+                'value'=>$ingridient['id']
+            ];
+        }
+        return $result;
+    }
 //    /**
 //     * @return Ingridient[] Returns an array of Ingridient objects
 //     */

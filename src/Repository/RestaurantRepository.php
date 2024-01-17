@@ -6,6 +6,7 @@ use App\Entity\Address;
 use App\Entity\Category;
 use App\Entity\OpeningHoursRestaurant;
 use App\Entity\Restaurant;
+use App\Entity\RestaurantCategory;
 use App\Entity\User;
 use App\Entity\UserData;
 use DateTimeImmutable;
@@ -264,18 +265,55 @@ class RestaurantRepository extends ServiceEntityRepository
                 return array('message'=>'Problem z dodaniem dni i godzin otwarcia restauracji');
             }
         }
-//        $categories = $this->getEntityManager()->getRepository(Category::class);
-//         odkomentowac pod dodaniu kategori
-//        foreach ($data['restaurantCategories'] as $item) {
-//            $category = new Category();
-//            $category->setName($item['name']);
-//            $category->setDescription($item['description']);
-//            $result = $categories->addCategory($category);
-//            if (empty($result)) {
-//                return 'Problem z dodaniem kategori dla restauracji';
-//            }
-//        }
 
+        $categoryRepository = $this->getEntityManager()->getRepository(RestaurantCategory::class);
+        foreach ($data['restaurantCategories'] as $categoryId) {
+            $category = $categoryRepository->find($categoryId);
+            if (!$category) {
+                return array('message'=>"Kategoria o ID $categoryId nie została znaleziona.");
+            }
+            $categoryRrestaurant = new RestaurantCategory();
+            $categoryRrestaurant->setRestaurant($restaurant);
+            $categoryRrestaurant->setCategory($category);
+            $this->getEntityManager()->persist($categoryRrestaurant);
+            try {
+                $this->getEntityManager()->flush();
+            } catch (Exception $e) {
+                return $e->getMessage();
+            }
+        }
+
+        return null;
+    }
+
+    public function setCategory(array $data)
+    {
+        if (!array_key_exists('name', $data) || empty($data['name'])) {
+            return array('message'=>'Nazwa kategorii jest wymagana');
+        }
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $existingCategory = $qb->select('c')
+            ->from('App:Category','c')
+            ->where('c.name = :name')
+            ->setParameter(':name', $data['name'])
+            ->getQuery()
+            ->getOneOrNullResult();
+        if (!empty($existingCategory)){
+            return array('message'=>'Istnieje taka kategoria w systemie');
+        }
+        $category = new Category();
+        $category->setName($data['name']);
+
+        if (array_key_exists('description', $data) && !empty($data['description'])) {
+            $category->setDescription($data['description']);
+        }
+
+        $this->getEntityManager()->persist($category);
+        try {
+            $this->getEntityManager()->flush();
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
         return null;
     }
 

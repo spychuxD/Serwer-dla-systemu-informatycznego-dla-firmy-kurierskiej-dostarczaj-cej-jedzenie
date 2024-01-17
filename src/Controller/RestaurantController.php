@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\Address;
 use App\Entity\Restaurant;
 use App\Repository\RestaurantRepository;
+use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -16,10 +17,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class RestaurantController extends AbstractController
 {
     private RestaurantRepository $restaurantRepository;
+    private CategoryRepository $categoryRepository;
 
-    public function __construct(RestaurantRepository $restaurantRepository)
+    public function __construct(RestaurantRepository $restaurantRepository, CategoryRepository $categoryRepository)
     {
         $this->restaurantRepository = $restaurantRepository;
+        $this->categoryRepository = $categoryRepository;
     }
 
     #[Route('common/restaurants', name: 'common_restaurants', methods: 'GET')]
@@ -104,6 +107,44 @@ class RestaurantController extends AbstractController
         return new Response(
             json_encode(array('message'=>'Pomyślnie dodano restauracje do systemu')),
             201,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/addCategory', name: 'api_add_category', methods: 'POST')]
+    public function addCategory(Request $request): Response
+    {
+        $content = $request->getContent();
+        $category = json_decode($content, true);
+        $result = $this->restaurantRepository->setCategory($category['category']);
+        if(!empty($result)) {
+            return new Response(
+                json_encode($result),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message'=>'Pomyślnie dodano kategorię do systemu')),
+            201,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/getCategories', name: 'api_admin_get_categories', methods: 'GET')]
+    public function getCategories(): Response
+    {
+        $categories = $this->categoryRepository->getCategories();
+        if(empty($categories)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($categories),
+            200,
             array('content-type' => 'application/json')
         );
     }

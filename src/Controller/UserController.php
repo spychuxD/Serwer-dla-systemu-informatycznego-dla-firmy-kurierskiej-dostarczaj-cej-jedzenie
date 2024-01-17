@@ -97,4 +97,22 @@ class UserController extends AbstractController
             array('content-type' => 'application/json')
         );
     }
+
+    #[Route('api/admin/getUsers', name: 'api_admin_get_user', methods: 'GET')]
+    public function getIngridientsCategories(): Response
+    {
+        $users = $this->userRepository->getUsers();
+        if(empty($users)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($users),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
 }

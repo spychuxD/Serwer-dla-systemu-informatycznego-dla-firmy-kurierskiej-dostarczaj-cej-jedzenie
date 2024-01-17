@@ -18,7 +18,7 @@ class FavoriteRestaurantsController extends AbstractController
         $this->favoriteRestaurantsRepository = $favoriteRestaurantsRepository;
         $this->userRepository = $userRepository;
     }
-    #[Route('user/favoriteRestaurants', name: 'common_user_favorite_restaurants')]
+    #[Route('user/favoriteRestaurants', name: 'common_user_favorite_restaurants', methods: 'GET')]
     public function getFavoriteRestaurants()
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');

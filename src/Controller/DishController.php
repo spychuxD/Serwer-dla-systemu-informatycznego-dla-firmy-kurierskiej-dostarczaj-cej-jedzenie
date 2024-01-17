@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Controller;
+use App\Repository\DishCategoryRepository;
 use App\Repository\DishIngridientRepository;
 use App\Repository\DishRepository;
+use App\Repository\IngridientCategoryRepository;
+use App\Repository\IngridientRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -11,11 +15,18 @@ class DishController extends AbstractController
 {
     private DishRepository $dishRepository;
     private DishIngridientRepository $dishIngridientRepository;
+    private IngridientCategoryRepository $ingridientCategoryRepository;
+    private DishCategoryRepository $dishCategoryRepository;
+    private IngridientRepository $ingridientRepository;
 
-    public function __construct(DishRepository $dishRepository, DishIngridientRepository $dishIngridientRepository)
+    public function __construct(DishRepository $dishRepository, DishIngridientRepository $dishIngridientRepository,
+                                IngridientCategoryRepository $ingridientCategoryRepository, DishCategoryRepository $dishCategoryRepository, IngridientRepository $ingridientRepository)
     {
         $this->dishRepository = $dishRepository;
         $this->dishIngridientRepository = $dishIngridientRepository;
+        $this->ingridientCategoryRepository = $ingridientCategoryRepository;
+        $this->dishCategoryRepository = $dishCategoryRepository;
+        $this->ingridientRepository = $ingridientRepository;
     }
 
     #[Route('common/dishesByRestaurant/{id}', name: 'common_dishes_by_restaurant_id', methods: 'GET')]
@@ -121,6 +132,138 @@ class DishController extends AbstractController
 
         return new Response(
             json_encode($ingridientCategories),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/getDishes', name: 'api_admin_get_dishes', methods: 'GET')]
+    public function getDishes(): Response
+    {
+        $dishes = $this->dishRepository->getDishes();
+        if(empty($dishes)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($dishes),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/addDishCategory', name: 'api_add_dish_category', methods: 'POST')]
+    public function addDishCategory(Request $request): Response
+    {
+        $content = $request->getContent();
+        $category = json_decode($content, true);
+        $result = $this->dishCategoryRepository->setCategory($category['category']);
+        if(!empty($result)) {
+            return new Response(
+                json_encode($result),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message'=>'Pomyślnie dodano kategorię do systemu')),
+            201,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/addIngridientCategory', name: 'api_add_ingridient_category', methods: 'POST')]
+    public function addIngridientCategory(Request $request): Response
+    {
+        $content = $request->getContent();
+        $category = json_decode($content, true);
+        $result = $this->ingridientCategoryRepository->setCategory($category['category']);
+        if(!empty($result)) {
+            return new Response(
+                json_encode($result),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message'=>'Pomyślnie dodano kategorię do systemu')),
+            201,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/getDishesCategories', name: 'api_admin_get_dishes_categories', methods: 'GET')]
+    public function getDishesCategories(): Response
+    {
+        $dishes = $this->dishCategoryRepository->getCategories();
+        if(empty($dishes)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($dishes),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/getIngridientsCategories', name: 'api_admin_get_ingridients_categories', methods: 'GET')]
+    public function getIngridientsCategories(): Response
+    {
+        $dishes = $this->ingridientCategoryRepository->getCategories();
+        if(empty($dishes)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($dishes),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/addDish', name: 'api_admin_add_dish', methods: 'POST')]
+    public function addDish(Request $request): Response
+    {
+        $content = $request->getContent();
+        $dish = json_decode($content, true);
+        $result = $this->dishRepository->setDish($dish['dish']);
+        if(!empty($result)) {
+            return new Response(
+                json_encode($result),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message'=>'Pomyślnie dodano restauracje do systemu')),
+            201,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/admin/getCateogryIngridients/{id}', name: 'api_admin_get_ingridients_category_id', methods: 'GET')]
+    public function getCateogryIngridients($id): Response
+    {
+        $dishes = $this->ingridientRepository->getCategoryIngridients($id);
+        if(empty($dishes)) {
+            return new Response(
+                json_encode(array('message'=>'Brak kategorii')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($dishes),
             200,
             array('content-type' => 'application/json')
         );

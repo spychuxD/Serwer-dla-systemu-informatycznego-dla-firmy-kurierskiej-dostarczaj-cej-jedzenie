@@ -76,6 +76,21 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $this->findBy(array('email'=> $email));
     }
 
+    public function getUsers(): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('ud.firstName, ud.surname, ud.dateOfBirth, ud.phoneNumber,
+        CONCAT(ma.street, \' \', ma.parcelNumber, \'/\', ma.apartmentNumber, \', \', ma.postcode, \' \', ma.city) AS fullAddress,
+        u.email, u.roles')
+            ->from('App:UserData', 'ud')
+            ->leftJoin('ud.idUser', 'u')
+            ->leftJoin('ud.mainAddress', 'ma')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
 //    /**
 //     * @return User[] Returns an array of User objects
 //     */
