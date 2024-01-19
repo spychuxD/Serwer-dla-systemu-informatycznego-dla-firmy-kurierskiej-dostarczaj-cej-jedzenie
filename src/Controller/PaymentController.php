@@ -82,7 +82,7 @@ class PaymentController extends AbstractController
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => http_build_query($postRequest),
-            CURLOPT_CAINFO => 'C:/Users/dawid/PhpstormProjects/symfony6foodApp/config/CA/cacert.pem',
+            CURLOPT_CAINFO => 'C:/Users/Spychu/PhpstormProjects/WebApp/symfony/app/config/CA/cacert.pem',
         );
 
         foreach ($options as $key => $option) {
@@ -110,8 +110,8 @@ class PaymentController extends AbstractController
                     'name' => $email
                 );
                 $payerUrls = array(
-                    'success' => 'http://localhost:8080/success',
-                    'error' => 'http://localhost:8080/error'
+                    'success' => 'http://localhost:8080/paymentSuccess',
+                    'error' => 'http://localhost:8080/paymentError'
                 );
                 $notification = array(
                     'url' => 'http://localhost:8080/cartSummary',
@@ -145,7 +145,7 @@ class PaymentController extends AbstractController
                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                     CURLOPT_CUSTOMREQUEST => 'POST',
                     CURLOPT_POSTFIELDS => json_encode($postRequest),
-                    CURLOPT_CAINFO => 'C:/Users/dawid/PhpstormProjects/symfony6foodApp/config/CA/cacert.pem',
+                    CURLOPT_CAINFO => 'C:/Users/Spychu/PhpstormProjects/WebApp/symfony/app/config/CA/cacert.pem',
                     CURLOPT_HTTPHEADER => array(
                         'Content-Type: application/json',
                         'Authorization: Bearer ' . $accessToken
@@ -236,7 +236,10 @@ class PaymentController extends AbstractController
         }
 
         return new Response(
-            json_encode($transactionResponse['transactionPaymentUrl']),
+            json_encode(array(
+                'path'=> $transactionResponse['transactionPaymentUrl'],
+                'order'=> $order->getId()
+                )),
             201,
             array('content-type' => 'application/json')
         );

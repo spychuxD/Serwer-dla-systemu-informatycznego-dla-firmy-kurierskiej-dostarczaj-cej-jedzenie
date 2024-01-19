@@ -26,8 +26,9 @@ class CourierRepository extends ServiceEntityRepository
         $qb = $this->getEntityManager()->createQueryBuilder();
         return $qb->select('c')
             ->from('App:Courier','c')
-//            ->leftJoin('r.restaurantAddress', 'a')
-            ->where('c.id = :id')
+            ->leftJoin('c.userData', 'ud')
+            ->leftJoin('ud.idUser', 'u')
+            ->where('u.id = :id')
             ->setParameter(':id', $id)
             ->getQuery()
             ->getOneOrNullResult();

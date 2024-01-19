@@ -11,7 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mime\Email;
 
 class UserController extends AbstractController
 {
@@ -23,6 +25,31 @@ class UserController extends AbstractController
         $this->userRepository = $userRepository;
         $this->userDataRepository = $userDataRepository;
         $this->addressRepository = $adddressRepository;
+    }
+
+    #[Route('api/getUserAddress', name: 'api_get_address', methods: 'GET')]
+    public function getAddress(): Response
+    {
+        $token = $this->forward(SecurityController::class . '::decodeToken');
+        $content = json_decode($token->getContent(), true);
+        $email = $content['username'];
+        $user = $this->userRepository->getUserByEmail($email);
+        $userTemp = $user[0];
+        $userId = $userTemp->getId();
+
+        $userAddress = $this->userDataRepository->getUserAddressById($userId);
+        if(empty($userAddress)) {
+            return new Response(
+                json_encode(array('message' => 'Brak adresu')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode($userAddress),
+            200,
+            array('content-type' => 'application/json')
+        );
     }
 
     #[Route('common/registration', name: 'common_registration', methods: 'POST')]
@@ -115,4 +142,38 @@ class UserController extends AbstractController
             array('content-type' => 'application/json')
         );
     }
+    #[Route('common/passwordReset', name: 'api_password_reset', methods: 'POST')]
+    public function requestPasswordReset(Request $request, MailerInterface $mailer): Response
+    {
+        $email = json_decode($request->getContent(), true)['email'];
+        $user = $this->userRepository->getUserByEmail($email);
+
+        if (!$user) {
+            return new Response(
+                json_encode(['message' => 'Brak użytkownika o podanym adresie mailowym']),
+                207,
+                ['content-type' => 'application/json']
+            );
+        }
+
+        $userTemp = $user[0];
+        $resetToken = bin2hex(random_bytes(16));
+        $userTemp->setToken($resetToken);
+        $this->userRepository->upgradeToken($userTemp);
+        $resetLink = "http://localhost/reset-password?token=$resetToken";
+        //wysyłanie e-maila z linkiem resetowania
+        $email = (new Email())
+            ->from('dawid.spychalski2000@gmail.com') // Zastąp odpowiednim adresem e-mail
+            ->to($userTemp->getEmail())
+            ->subject('Resetowanie hasła')
+            ->html("<p>Aby zresetować hasło, kliknij w poniższy link:</p><a href='$resetLink'>$resetLink</a>");
+
+        $mailer->send($email);
+        return new Response(
+            json_encode(['message' => 'Link resetowania hasła został wysłany na adres e-mail.']),
+            201,
+            ['content-type' => 'application/json']
+        );
+    }
+
 }

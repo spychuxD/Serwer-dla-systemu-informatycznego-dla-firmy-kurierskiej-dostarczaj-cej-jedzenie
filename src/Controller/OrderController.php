@@ -137,4 +137,49 @@ class OrderController extends AbstractController
             array('content-type' => 'application/json')
         );
     }
+
+    #[Route('common/getOrder/{id}', name: 'common_get_order', methods: 'GET')]
+    public function getOrder($id): Response
+    {
+        $order = $this->orderRepository->getOrderById($id);
+        if(empty($order)) {
+            return new Response(
+                json_encode(array('message'=>'Brak')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        $restaurant = $order->getRestaurant();
+        $restaurantAddress = $restaurant->getRestaurantAddress();
+        $fullAddress = $order->getAddress();
+        $addressParts = explode(',', $fullAddress, 2);
+        $userAddressLine1 = trim($addressParts[0]);
+        if (isset($addressParts[1])) {
+            $zipcodeCity = explode(' ', trim($addressParts[1]), 2);
+            $userAddressZipCode = $zipcodeCity[0];
+            $userAddressCity = $zipcodeCity[1] ?? '';
+        } else {
+            $userAddressZipCode = '';
+            $userAddressCity = '';
+        }
+        $result = [
+            'address' => $order->getAddress(),
+            'cart' => $order->getCart(),
+            'cost' => $order->getCost(),
+            'userAddressLine1' => $userAddressLine1,
+            'userAddressZipCode' => $userAddressZipCode,
+            'userAddressCity' => $userAddressCity,
+            'restaurantName'=> $restaurant->getName(),
+            'restaurantAddressLine1' => $restaurantAddress->getStreet() . ' ' . $restaurantAddress->getParcelNumber() .
+                '/' . $restaurantAddress->getApartmentNumber(),
+            'restaurantAddressZipCode' => $restaurantAddress->getPostcode(),
+            'restaurantAddressCity' => $restaurantAddress->getCity(),
+            'status'=>$order->getStatus()
+        ];
+        return new Response(
+            json_encode($result),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
 }

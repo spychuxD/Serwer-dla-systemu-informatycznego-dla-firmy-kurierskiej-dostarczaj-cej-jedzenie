@@ -3,6 +3,7 @@
 namespace App\Controller;
 use App\Entity\Courier;
 use App\Repository\CourierRepository;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,19 +21,27 @@ class LocationController extends AbstractController
 //        $this->dishIngridientRepository = $dishIngridientRepository;
 //    }
     private CourierRepository $courierRepository;
+    private UserRepository $userRepository;
 
-    public function __construct(CourierRepository $courierRepository)
+    public function __construct(CourierRepository $courierRepository, UserRepository $userRepository)
     {
         $this->courierRepository = $courierRepository;
+        $this->userRepository = $userRepository;
     }
 
-    #[Route('api/setLocation/{id}', name: 'common_set_location_id', methods: 'PUT')]
-    public function setLocation(Request $request, $id, EntityManagerInterface $entityManager): Response
+    #[Route('api/setLocation', name: 'ap_set_location', methods: 'PUT')]
+    public function setLocation(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $token = $this->forward(SecurityController::class . '::decodeToken');
+        $content = json_decode($token->getContent(), true);
+        $email = $content['username'];
+        $user = $this->userRepository->getUserByEmail($email);
+        $userTemp = $user[0];
+        $userId = $userTemp->getId();
+
         $content = $request->getContent();
         $location = json_decode($content, true);
-        $tmp = $this->courierRepository->getCourierById($id);
-        $courier = $tmp[0];
+        $courier = $this->courierRepository->getCourierById($userId);
         $courier->setLat($location['lat']);
         $courier->setLng($location['lng']);
         $entityManager->persist($courier);

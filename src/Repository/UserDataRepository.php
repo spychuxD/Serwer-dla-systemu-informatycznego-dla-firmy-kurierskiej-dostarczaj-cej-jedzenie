@@ -88,6 +88,45 @@ class UserDataRepository extends ServiceEntityRepository
         return null;
     }
 
+    public function getUserAddressById($id): ?array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('a.street, a.parcelNumber, a.apartmentNumber, a.postcode, a.city')
+            ->from('App:UserData','ud')
+            ->leftJoin('ud.mainAddress', 'a')
+            ->leftJoin('ud.idUser', 'u')
+            ->where('u.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function getDataByUserId($id)
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('ud.id, a.street, a.parcelNumber, a.apartmentNumber, a.postcode, a.city')
+            ->from('App:UserData','ud')
+            ->leftJoin('ud.mainAddress', 'a')
+            ->leftJoin('ud.idUser', 'u')
+            ->where('u.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function getUserDataByUserId($id)
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('ud')
+            ->from('App:UserData','ud')
+            ->leftJoin('ud.mainAddress', 'a')
+            ->leftJoin('ud.idUser', 'u')
+            ->where('u.id = :id')
+            ->setParameter(':id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 //    /**
 //     * @return UserData[] Returns an array of UserData objects
 //     */

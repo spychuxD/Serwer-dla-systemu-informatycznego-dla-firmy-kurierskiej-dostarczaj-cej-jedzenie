@@ -3,8 +3,12 @@
 namespace App\Repository;
 
 use App\Entity\FavoriteRestaurants;
+use App\Entity\Restaurant;
+use App\Entity\UserData;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use phpDocumentor\Reflection\Types\Boolean;
+use Symfony\Component\Config\Definition\Exception\Exception;
 
 /**
  * @extends ServiceEntityRepository<FavoriteRestaurants>
@@ -32,11 +36,40 @@ class FavoriteRestaurantsRepository extends ServiceEntityRepository
             ->leftJoin('fr.restaurant', 'r')
             ->leftJoin('r.restaurantAddress', 'a')
             ->leftJoin('fr.userData', 'ud')
-            ->where('a.city = :city')
-            ->setParameter('city', 'Kielce')
             ->andWhere('ud.idUser = ' . $id)
             ->getQuery()
             ->getResult();
+    }
+
+    public function addToFavorite(Restaurant $restaurant,UserData $userData)
+    {
+        $favoriteRestaurant = new FavoriteRestaurants();
+        $favoriteRestaurant->setRestaurant($restaurant);
+        $favoriteRestaurant->setUserData($userData);
+        $this->getEntityManager()->persist($favoriteRestaurant);
+        try {
+            $this->getEntityManager()->flush();
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+        return null;
+    }
+
+    public function removeFromFavorite(Restaurant $restaurant, UserData $userData): bool
+    {
+        try {
+            $favorite = $this->findOneBy(['restaurant' => $restaurant, 'userData' => $userData]);
+
+            if (!$favorite) {
+                return false;
+            }
+
+            $this->getEntityManager()->remove($favorite);
+            $this->getEntityManager()->flush();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
 //    /**

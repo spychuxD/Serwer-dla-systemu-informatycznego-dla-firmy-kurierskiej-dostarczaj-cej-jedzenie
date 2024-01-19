@@ -33,13 +33,13 @@ class CourierController extends AbstractController
         if($courierAssigned === true) {
             return new Response(
                 json_encode(array('status'=>'ZAJĘTY')),
-                207,
+                200,
                 array('content-type' => 'application/json')
             );
         } else {
             return new Response(
                 json_encode(array('status'=>'WOLNY')),
-                207,
+                200,
                 array('content-type' => 'application/json')
             );
         }
