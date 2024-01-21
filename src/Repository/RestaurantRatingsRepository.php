@@ -49,13 +49,24 @@ class RestaurantRatingsRepository extends ServiceEntityRepository
     public function getUserRatings($id): array
     {
         $qb = $this->getEntityManager()->createQueryBuilder();
-        return $qb->select('r.id, r.name, r.description, r.fileName, r.email, r.phoneNumber,
-        a.street, a.apartmentNumber, a.parcelNumber, a.postcode, a.city')
+        return $qb->select('rr')
             ->from('App:RestaurantRatings','rr')
             ->leftJoin('rr.restaurant', 'r')
             ->leftJoin('r.restaurantAddress', 'a')
             ->leftJoin('rr.userData', 'ud')
             ->andWhere('ud.idUser = ' . $id)
+            ->getQuery()
+            ->getResult();
+    }
+    public function getRestaurantRatings($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('rr')
+            ->from('App:RestaurantRatings','rr')
+            ->leftJoin('rr.restaurant', 'r')
+            ->leftJoin('r.restaurantAddress', 'a')
+            ->leftJoin('rr.userData', 'ud')
+            ->andWhere('r.id = ' . $id)
             ->getQuery()
             ->getResult();
     }

@@ -174,11 +174,57 @@ class OrderController extends AbstractController
                 '/' . $restaurantAddress->getApartmentNumber(),
             'restaurantAddressZipCode' => $restaurantAddress->getPostcode(),
             'restaurantAddressCity' => $restaurantAddress->getCity(),
-            'status'=>$order->getStatus()
+            'status'=>$order->getStatus(),
+            'restaurantId'=>$restaurant->getId()
         ];
         return new Response(
             json_encode($result),
             200,
+            array('content-type' => 'application/json')
+        );
+    }
+
+    #[Route('api/updateOrderStatus', name: 'api_update_order_status', methods: 'PUT')]
+    public function updateOrderStatus(Request $request): Response
+    {
+        $token = $this->forward(SecurityController::class . '::decodeToken');
+        $content = json_decode($token->getContent(), true);
+        $email = $content['username'];
+
+        $params = json_decode($request->getContent(), true);
+        if (!isset($params['orderId']) || !isset($params['newStatus'])) {
+            return new Response(
+                json_encode(array('message' => 'Nieprawidłowe dane')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+
+        $orderId = $params['orderId'];
+        $newStatus = $params['newStatus'];
+
+        $order = $this->orderRepository->getOrderById($orderId);
+        if (!$order) {
+            return new Response(
+                json_encode(array('message' => 'Zamówienie nie znalezione')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+
+        $order->setStatus($newStatus);
+        $result = $this->orderRepository->addOrder($order);
+        if(!empty($result))
+        {
+            return new Response(
+                json_encode(array('message' => 'Niezidentyfikowany błąd')),
+                207,
+                array('content-type' => 'application/json')
+            );
+        }
+        return new Response(
+            json_encode(array('message' => 'Status zamówienia zaktualizowany')),
+            200, // OK
             array('content-type' => 'application/json')
         );
     }

@@ -66,13 +66,17 @@ class OrderRepository extends ServiceEntityRepository
         r.lat, r.lng, r.name')
             ->from('App:Order','o')
             ->leftJoin('o.courier', 'c')
-            ->andWhere('c.id = :id')
             ->leftJoin('o.restaurant', 'r')
             ->leftJoin('r.restaurantAddress', 'a')
-            ->setParameter(':id', $id)
-            ->andWhere('o.status = :status')
-            ->setParameter(':status', 'ACCEPTED')
+            ->where('c.id = :id')
             ->andWhere('c.assigned = true')
+            ->andWhere($qb->expr()->orX(
+                $qb->expr()->eq('o.status', ':status1'),
+                $qb->expr()->eq('o.status', ':status2')
+            ))
+            ->setParameter(':id', $id)
+            ->setParameter(':status1', 'ACCEPTED')
+            ->setParameter(':status2', 'DELIVERY')
             ->getQuery()
             ->getResult();
     }

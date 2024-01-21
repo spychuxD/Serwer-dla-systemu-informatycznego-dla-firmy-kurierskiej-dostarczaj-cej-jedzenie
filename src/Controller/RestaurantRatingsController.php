@@ -29,7 +29,7 @@ class RestaurantRatingsController extends AbstractController
         $this->restaurantRepository = $restaurantRepository;
     }
 
-    #[Route('api/ratings/add/{id}', name: 'api_add_rating', methods: 'POST')]
+    #[Route('common/addRating/{id}', name: 'api_add_rating', methods: 'POST')]
     public function addRating(Request $request, $id): Response
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');
@@ -43,10 +43,10 @@ class RestaurantRatingsController extends AbstractController
         $ratingData = json_decode($request->getContent(), true);
         // Tworzenie i ustawianie właściwości nowej oceny
         $rating = new RestaurantRatings();
-//        $rating->setValue($ratingData['value']);
-        $rating->setValue(4.5);
-//        $rating->setDescription($ratingData['description']);
-        $rating->setDescription('test');
+        $rating->setValue($ratingData['value']);
+//        $rating->setValue(4.5);
+        $rating->setDescription($ratingData['description']);
+//        $rating->setDescription('test');
         $rating->setRestaurant($restaurant);
         $rating->setUserData($userData);
         $now = new DateTime();
@@ -68,7 +68,7 @@ class RestaurantRatingsController extends AbstractController
         );
     }
 
-    #[Route('api/ratings/remove/{id}', name: 'api_remove_rating', methods: 'DELETE')]
+    #[Route('common/ratings/remove/{id}', name: 'api_remove_rating', methods: 'DELETE')]
     public function removeRating($id): Response
     {
         $rating = $this->restaurantRatingsRepository->getRatingById($id);
@@ -89,7 +89,7 @@ class RestaurantRatingsController extends AbstractController
         );
     }
 
-    #[Route('api/userRatings', name: 'api_get_rating', methods: 'GET')]
+    #[Route('api/userRatings', name: 'api_user_ratings', methods: 'GET')]
     public function getRating(): Response
     {
         $response = $this->forward(SecurityController::class . '::decodeToken');
@@ -98,28 +98,117 @@ class RestaurantRatingsController extends AbstractController
         $user = $this->userRepository->getUserByEmail($email);
         $userTemp = $user[0];
         $userId = $userTemp->getId();
-        $rating = $this->restaurantRatingsRepository->getUserRatings($userId);
+        $ratings = $this->restaurantRatingsRepository->getUserRatings($userId);
 
-        if (!empty($rating)) {
-            return new Response(
-                json_encode($rating),
-                200,
-                array('content-type' => 'application/json')
-            );
+        if(!empty($ratings)) {
+            $result = [];
+            foreach ($ratings as $rating) {
+                $restaurant = $rating->getRestaurant();
+                $userData = $rating->getUserData();
+                $user = $userData->getIdUser();
+                $result[] = [
+                    'restaurantName'=>$restaurant->getName(),
+                    'restaurantId'=>$restaurant->getId(),
+                    'date'=>$rating->getDate()->format('Y-m-d H:i:s'),
+                    'userEmail'=>$user->getEmail(),
+                    'value'=>$rating->getValue(),
+                    'description'=>$rating->getDescription()
+                ];
+            }
+            if(!empty($result)) {
+                return new Response(
+                    json_encode($result),
+                    200,
+                    array('content-type' => 'application/json')
+                );
+            } else {
+                return new Response(
+                    json_encode(['message'=>'Wystąpił nieoczekiwany błąd']),
+                    207,
+                    array('content-type' => 'application/json')
+                );
+            }
         }
-
         return new Response(
-            json_encode(['message' => 'Brak opinii użytkownika']),
-            207,
+            json_encode($ratings),
+            200,
+            array('content-type' => 'application/json')
+        );
+    }
+#[Route('common/restaurantRatings/{id}', name: 'common_restaurant_ratings', methods: 'GET')]
+    public function getRestaurantRating($id): Response
+    {
+        $ratings = $this->restaurantRatingsRepository->getRestaurantRatings($id);
+
+        if(!empty($ratings)) {
+            $result = [];
+            foreach ($ratings as $rating) {
+                $restaurant = $rating->getRestaurant();
+                $userData = $rating->getUserData();
+                $user = $userData->getIdUser();
+                $result[] = [
+                    'restaurantName'=>$restaurant->getName(),
+                    'restaurantId'=>$restaurant->getId(),
+                    'date'=>$rating->getDate()->format('Y-m-d H:i:s'),
+                    'userEmail'=>$user->getEmail(),
+                    'value'=>$rating->getValue(),
+                    'description'=>$rating->getDescription()
+                ];
+            }
+            if(!empty($result)) {
+                return new Response(
+                    json_encode($result),
+                    200,
+                    array('content-type' => 'application/json')
+                );
+            } else {
+                return new Response(
+                    json_encode(['message'=>'Wystąpił nieoczekiwany błąd']),
+                    207,
+                    array('content-type' => 'application/json')
+                );
+            }
+        }
+        return new Response(
+            json_encode($ratings),
+            200,
             array('content-type' => 'application/json')
         );
     }
 
-    #[Route('api/ratings', name: 'api_get_all_ratings', methods: 'GET')]
+    #[Route('common/ratings', name: 'api_get_all_ratings', methods: 'GET')]
     public function getAllRatings(): Response
     {
         $ratings = $this->restaurantRatingsRepository->getAllRatings();
-
+        if(!empty($ratings)) {
+            $result = [];
+            foreach ($ratings as $rating) {
+                $restaurant = $rating->getRestaurant();
+                $userData = $rating->getUserData();
+                $user = $userData->getIdUser();
+                $result[] = [
+                    'restaurantName'=>$restaurant->getName(),
+                    'restaurantId'=>$restaurant->getId(),
+                    'date'=>$rating->getDate()->format('Y-m-d H:i:s'),
+                    'userEmail'=>$user->getEmail(),
+                    'value'=>$rating->getValue(),
+                    'description'=>$rating->getDescription()
+                ];
+            }
+            if(!empty($result)) {
+                return new Response(
+                    json_encode($result),
+                    200,
+                    array('content-type' => 'application/json')
+                );
+            } else {
+                return new Response(
+                    json_encode(['message'=>'Wystąpił nieoczekiwany błąd']),
+                    207,
+                    array('content-type' => 'application/json')
+                );
+            }
+        }
         return new Response(
             json_encode($ratings),
             200,

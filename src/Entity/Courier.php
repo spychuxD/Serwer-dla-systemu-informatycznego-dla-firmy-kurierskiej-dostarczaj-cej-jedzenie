@@ -32,6 +32,12 @@ class Courier
     #[ORM\Column(nullable: true)]
     private ?float $lng = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $baseRate = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $percentageRate = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -105,6 +111,30 @@ class Courier
     public function setLng(?float $lng): static
     {
         $this->lng = $lng;
+
+        return $this;
+    }
+
+    public function getBaseRate(): ?float
+    {
+        return $this->baseRate;
+    }
+
+    public function setBaseRate(float $baseRate): static
+    {
+        $this->baseRate = $baseRate;
+
+        return $this;
+    }
+
+    public function getPercentageRate(): ?float
+    {
+        return $this->percentageRate;
+    }
+
+    public function setPercentageRate(float $percentageRate): static
+    {
+        $this->percentageRate = $percentageRate;
 
         return $this;
     }
