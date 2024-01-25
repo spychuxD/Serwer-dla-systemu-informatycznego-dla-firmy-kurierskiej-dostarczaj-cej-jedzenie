@@ -3,9 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Messages;
+use App\Entity\Order;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-
+use Symfony\Component\Config\Definition\Exception\Exception;
 /**
  * @extends ServiceEntityRepository<Messages>
  *
@@ -19,6 +20,35 @@ class MessagesRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Messages::class);
+    }
+
+    public function getMessagesByOrderId($id): array
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        return $qb->select('m')
+            ->from('App:Messages','m')
+            ->leftJoin('m.orderId', 'o')
+            ->andWhere('o.id = ' . $id)
+            ->orderBy('m.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function addMessage($messageTo, $sender, Order $order, $date)
+    {
+        $message = new Messages();
+        $message->setMessage($messageTo);
+        $message->setSender($sender);
+        $message->setOrderId($order);
+        $message->setDate(new \DateTime($date));
+
+        $this->getEntityManager()->persist($message);
+        try {
+            $this->getEntityManager()->flush();
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+        return null;
     }
 
 //    /**

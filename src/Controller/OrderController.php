@@ -41,7 +41,7 @@ class OrderController extends AbstractController
                 array('content-type' => 'application/json')
             );
         }
-        $order = $tmp[0];
+        $order = $tmp;
         return new Response(
             json_encode($order),
             200,
@@ -67,7 +67,7 @@ class OrderController extends AbstractController
                 array('content-type' => 'application/json')
             );
         }
-        $order = $tmp[0];
+        $order = $tmp;
         return new Response(
             json_encode($order),
             200,
@@ -175,7 +175,8 @@ class OrderController extends AbstractController
             'restaurantAddressZipCode' => $restaurantAddress->getPostcode(),
             'restaurantAddressCity' => $restaurantAddress->getCity(),
             'status'=>$order->getStatus(),
-            'restaurantId'=>$restaurant->getId()
+            'restaurantId'=>$restaurant->getId(),
+            'orderId'=>$order->getId()
         ];
         return new Response(
             json_encode($result),

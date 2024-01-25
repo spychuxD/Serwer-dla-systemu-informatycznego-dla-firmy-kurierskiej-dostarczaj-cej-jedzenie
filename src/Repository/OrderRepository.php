@@ -52,11 +52,9 @@ class OrderRepository extends ServiceEntityRepository
             ->leftJoin('o.restaurant', 'r')
             ->leftJoin('r.restaurantAddress', 'a')
             ->setParameter(':id', $id)
-            ->andWhere('o.status = :status')
-            ->setParameter(':status', 'PENDING')
-            ->andWhere('c.assigned = false')
+            ->andWhere($qb->expr()->notIn('o.status', ['DELIVERED', 'UNDELIVERED']))
             ->getQuery()
-            ->getResult();
+            ->getOneOrNullResult();
     }
     public function getOrderForCourier($id)
     {
@@ -70,15 +68,10 @@ class OrderRepository extends ServiceEntityRepository
             ->leftJoin('r.restaurantAddress', 'a')
             ->where('c.id = :id')
             ->andWhere('c.assigned = true')
-            ->andWhere($qb->expr()->orX(
-                $qb->expr()->eq('o.status', ':status1'),
-                $qb->expr()->eq('o.status', ':status2')
-            ))
+            ->andWhere($qb->expr()->notIn('o.status', ['DELIVERED', 'UNDELIVERED']))
             ->setParameter(':id', $id)
-            ->setParameter(':status1', 'ACCEPTED')
-            ->setParameter(':status2', 'DELIVERY')
             ->getQuery()
-            ->getResult();
+            ->getOneOrNullResult();
     }
 
     public function getOrderById($id): ?Order
