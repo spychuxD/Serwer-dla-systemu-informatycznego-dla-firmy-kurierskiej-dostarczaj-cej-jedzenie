@@ -1,8 +1,3 @@
-## Project setup
-```
-npm install
-```
-
 # W tej sekcji szczegółowo opisano proces implementacji serwera, uwzględniając wykorzystane technologie, 
 frameworki oraz metody zapewnienia bezpieczeństwa i efektywności.
 ```
